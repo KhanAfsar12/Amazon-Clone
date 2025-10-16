@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="static/css/navbar.css">
+</head>
+<body>
+    <!-- Main Navbar -->
+    <div class="navbar">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="/"><i class="fas fa-shopping-bag"></i> E-Shop</a>
+        </div>
+
+        <!-- Delivery Location -->
+        <div class="deliver-to">
+            <div class="location-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="location-text">
+                <span>Deliver to</span>
+                <span>New York 10001</span>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <select class="search-dropdown">
+                <option>All</option>
+                <option>Electronics</option>
+                <option>Books</option>
+                <option>Home & Kitchen</option>
+                <option>Fashion</option>
+            </select>
+            <input type="text" class="search-input" placeholder="Search E-Shop">
+            <button class="search-button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
+        <!-- Language Selector -->
+        <div class="language-selector">
+            <span class="flag">🇺🇸</span>
+            <span>EN</span>
+        </div>
+
+        <!-- Account & Lists -->
+        <div class="account-lists">
+            <a href="/signup"><span>Hello, Sign in</span></a>
+            <span>Account & Lists</span>
+        </div>
+
+        <!-- Returns & Orders -->
+        <div class="returns-orders">
+            <span>Returns</span>
+            <span>& Orders</span>
+        </div>
+
+        <!-- Cart -->
+        <div class="cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count">0</span>
+            <span class="cart-text">Cart</span>
+        </div>
+    </div>
+
+    <!-- Secondary Navbar -->
+    <div class="secondary-navbar">
+        <div class="mobile-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+        <a href="#" class="all-menu">
+            <i class="fas fa-bars"></i>
+            All
+        </a>
+        <a href="#">Today's Deals</a>
+        <a href="#">Customer Service</a>
+        <a href="#">Registry</a>
+        <a href="#">Gift Cards</a>
+        <a href="#">Sell</a>
+    </div>
+
+
+    <script>
+        // Simple cart counter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const cartCount = document.querySelector('.cart-count');
+            let count = 0;
+            
+            // For demonstration, add items to cart every 5 seconds
+            setInterval(() => {
+                count++;
+                cartCount.textContent = count;
+            }, 5000);
+            
+            // Mobile menu toggle
+            const mobileToggle = document.querySelector('.mobile-toggle');
+            const secondaryNavbar = document.querySelector('.secondary-navbar');
+            
+            mobileToggle.addEventListener('click', function() {
+                secondaryNavbar.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if object %}Edit{% else %}Add{% endif %} {{ model_name.title() }} - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">E-Commerce Admin</a>
+            <div>
+                <a href="/admin/{{ model_name }}" class="btn btn-outline-light btn-sm">Back to List</a>
+                <a href="/admin/logout" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>{% if object %}Edit{% else %}Add{% endif %} {{ model_name.title().singularize() }}</h4>
+                    </div>
+                    <div class="card-body">
+                        {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                        {% endif %}
+
+                        <form method="post">
+                            <!-- Basic Fields -->
+                            {% if model_name == 'products' %}
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control" 
+                                       value="{{ object.name if object else '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">SKU</label>
+                                <input type="text" name="sku" class="form-control" 
+                                       value="{{ object.sku if object else '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="3">{{ object.description if object else '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select name="category" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if object and object.category.id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Price</label>
+                                        <input type="number" step="0.01" name="price" class="form-control" 
+                                               value="{{ object.price if object else '' }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Stock Quantity</label>
+                                        <input type="number" name="stock_quantity" class="form-control" 
+                                               value="{{ object.stock_quantity if object else 0 }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" 
+                                       {% if not object or object.is_active %}checked{% endif %}>
+                                <label class="form-check-label">Active</label>
+                            </div>
+                            
+                            {% elif model_name == 'categories' %}
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" name="name" class="form-control" 
+                                       value="{{ object.name if object else '' }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea name="description" class="form-control" rows="3">{{ object.description if object else '' }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Parent Category</label>
+                                <select name="parent_category" class="form-control">
+                                    <option value="">None</option>
+                                    {% for category in parent_categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if object and object.parent_category and object.parent_category.id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" name="is_active" class="form-check-input" 
+                                       {% if not object or object.is_active %}checked{% endif %}>
+                                <label class="form-check-label">Active</label>
+                            </div>
+                            
+                            {% endif %}
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <a href="/admin/{{ model_name }}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

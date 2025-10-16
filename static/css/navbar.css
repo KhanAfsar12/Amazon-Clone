@@ -1,0 +1,274 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f3f3f3;
+        }
+
+        /* Main Navbar Container */
+        .navbar {
+            background-color: #131921;
+            color: white;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            position: relative;
+        }
+
+        /* Logo Section */
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            color: #ff9900;
+            margin-right: 5px;
+        }
+
+        /* Delivery Location */
+        .deliver-to {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .deliver-to:hover {
+            border: 1px solid white;
+        }
+
+        .location-icon {
+            margin-right: 5px;
+        }
+
+        .location-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .location-text span:first-child {
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .location-text span:last-child {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            flex-grow: 1;
+            max-width: 800px;
+            margin: 0 15px;
+        }
+
+        .search-dropdown {
+            background-color: #f3f3f3;
+            border-radius: 4px 0 0 4px;
+            border: none;
+            padding: 0 10px;
+            font-size: 12px;
+            color: #555;
+            cursor: pointer;
+            border-right: 1px solid #ddd;
+        }
+
+        .search-input {
+            flex-grow: 1;
+            border: none;
+            padding: 10px;
+            font-size: 15px;
+            width: 100%;
+        }
+
+        .search-button {
+            background-color: #febd69;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            padding: 0 15px;
+            cursor: pointer;
+        }
+
+        .search-button:hover {
+            background-color: #f3a847;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .language-selector:hover {
+            border: 1px solid white;
+        }
+
+        .flag {
+            margin-right: 5px;
+            font-size: 18px;
+        }
+
+        /* Account & Lists */
+        .account-lists {
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .account-lists:hover {
+            border: 1px solid white;
+        }
+
+        .account-lists span:first-child {
+            font-size: 12px;
+        }
+
+        .account-lists span:last-child {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Returns & Orders */
+        .returns-orders {
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .returns-orders:hover {
+            border: 1px solid white;
+        }
+
+        .returns-orders span:first-child {
+            font-size: 12px;
+        }
+
+        .returns-orders span:last-child {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Cart */
+        .cart {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .cart:hover {
+            border: 1px solid white;
+        }
+
+        .cart i {
+            font-size: 28px;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: 5px;
+            left: 20px;
+            color: #ff9900;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .cart-text {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        /* Secondary Navbar */
+        .secondary-navbar {
+            background-color: #232f3e;
+            color: white;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            height: 39px;
+        }
+
+        .secondary-navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .secondary-navbar a:hover {
+            border: 1px solid white;
+        }
+
+        .all-menu {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .all-menu i {
+            margin-right: 5px;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1100px) {
+
+            .deliver-to,
+            .language-selector,
+            .account-lists span:first-child,
+            .returns-orders span:first-child,
+            .cart-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                display: none;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
+            .secondary-navbar {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }

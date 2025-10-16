@@ -1,0 +1,179 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f3f3f3;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background-color: #232f3e;
+            color: white;
+        }
+
+        /* Back to Top */
+        .back-to-top {
+            background-color: #37475a;
+            text-align: center;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .back-to-top:hover {
+            background-color: #485769;
+        }
+
+        .back-to-top span {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* Footer Main Content */
+        .footer-content {
+            display: flex;
+            justify-content: space-around;
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-column {
+            flex: 1;
+            min-width: 200px;
+            margin: 0 15px;
+        }
+
+        .footer-column h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .footer-column ul li a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer Bottom */
+        .footer-bottom {
+            border-top: 1px solid #3a4553;
+            padding: 30px 0;
+        }
+
+        .footer-logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .footer-logo a {
+            color: white;
+            text-decoration: none;
+            font-size: 24px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .footer-logo i {
+            color: #ff9900;
+            margin-right: 5px;
+        }
+
+        /* Footer Links */
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-links a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 12px;
+            margin: 0 10px;
+            padding: 5px 0;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-divider {
+            width: 1px;
+            height: 12px;
+            background-color: #848688;
+            margin: 0 5px;
+        }
+
+        /* Copyright */
+        .copyright {
+            text-align: center;
+            color: #ddd;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        /* Country Selector */
+        .country-selector {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .country-selector a {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .country-selector a:hover {
+            text-decoration: underline;
+        }
+
+        .country-flag {
+            margin-right: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                padding: 30px 20px;
+            }
+
+            .footer-column {
+                margin-bottom: 30px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-divider {
+                display: none;
+            }
+        }

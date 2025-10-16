@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Shop - Product Categories</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="static/css/product-section.css">
+</head>
+<body>
+  
+   <!-- Main Content -->
+<div class="container">
+    <!-- Featured Products Section -->
+    {% if featured_products %}
+    <div class="category-section">
+        <div class="category-header">
+            <h2 class="category-title">Featured Products</h2>
+            <a href="/products" class="view-all">See all</a>
+        </div>
+        <div class="product-carousel">
+            <button class="carousel-nav prev" onclick="slideCarousel('featured', -1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="product-container" id="featured-carousel">
+                {% for product in featured_products %}
+                <div class="product-card">
+                    <div class="product-image">
+                        <img src="{{ product.primary_image or 'https://via.placeholder.com/180x150?text=No+Image' }}" 
+                             alt="{{ product.name }}"
+                             onerror="this.src='https://via.placeholder.com/180x150?text=No+Image'">
+                    </div>
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <div class="product-rating">
+                        {% for i in range(5) %}
+                            {% if i < product.average_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span>({{ product.review_count }})</span>
+                    </div>
+                    <div class="product-price">
+                        ${{ "%.2f"|format(product.price) }}
+                        {% if product.sale_price %}
+                            <span class="price-old">${{ "%.2f"|format(product.sale_price) }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="prime-badge">
+                        <i class="fas fa-shipping-fast"></i> FREE delivery
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-nav next" onclick="slideCarousel('featured', 1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Category Sections -->
+    {% for category in category_list %}
+    <div class="category-section">
+        <div class="category-header">
+            <h2 class="category-title">{{ category.name }}</h2>
+            <a href="/products?category={{ category.slug }}" class="view-all">See all</a>
+        </div>
+        <div class="product-carousel">
+            <button class="carousel-nav prev" onclick="slideCarousel('{{ category.slug }}', -1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="product-container" id="{{ category.slug }}-carousel">
+                {% if category_products[category.slug] %}
+                    {% for product in category_products[category.slug] %}
+                    <div class="product-card">
+                        <div class="product-image">
+                            <img src="{{ product.primary_image or 'https://via.placeholder.com/180x150?text=No+Image' }}" 
+                                 alt="{{ product.name }}"
+                                 onerror="this.src='https://via.placeholder.com/180x150?text=No+Image'">
+                        </div>
+                        <h3 class="product-title">{{ product.name }}</h3>
+                        <div class="product-rating">
+                            {% for i in range(5) %}
+                                {% if i < product.average_rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span>({{ product.review_count }})</span>
+                        </div>
+                        <div class="product-price">
+                            ${{ "%.2f"|format(product.price) }}
+                            {% if product.sale_price %}
+                                <span class="price-old">${{ "%.2f"|format(product.sale_price) }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="prime-badge">
+                            <i class="fas fa-shipping-fast"></i> FREE delivery
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-products">
+                        <p>No products found in this category.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <button class="carousel-nav next" onclick="slideCarousel('{{ category.slug }}', 1)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+    <script>
+        // Simple cart counter functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const cartCount = document.querySelector('.cart-count');
+            let count = 0;
+            
+            // For demonstration, add items to cart every 5 seconds
+            setInterval(() => {
+                count++;
+                cartCount.textContent = count;
+            }, 5000);
+            
+            // Mobile menu toggle
+            const mobileToggle = document.querySelector('.mobile-toggle');
+            const secondaryNavbar = document.querySelector('.secondary-navbar');
+            
+            mobileToggle.addEventListener('click', function() {
+                secondaryNavbar.classList.toggle('active');
+            });
+        });
+
+        // Carousel sliding functionality
+        function slideCarousel(category, direction) {
+            const carousel = document.getElementById(`${category}-carousel`);
+            const productWidth = 265; // Product card width + gap
+            const scrollAmount = productWidth * 3 * direction; // Scroll 3 products at a time
+            
+            carousel.scrollBy({
+                left: scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

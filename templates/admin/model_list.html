@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ model_name.title() }} - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard">E-Commerce Admin</a>
+            <div>
+                <a href="/admin/dashboard" class="btn btn-outline-light btn-sm">Dashboard</a>
+                <a href="/admin/logout" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="list-group">
+                    {% for model_key, model_config in request.app.extra['models'].items() %}
+                    <a href="/admin/{{ model_key }}" 
+                       class="list-group-item list-group-item-action {% if model_key == model_name %}active{% endif %}">
+                        {{ model_key.title() }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>{{ model_name.title() }}</h2>
+                    <a href="/admin/{{ model_name }}/add" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add {{ model_name.title() }}
+                    </a>
+                </div>
+
+                <!-- Search and Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Search..." value="{{ search or '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <select name="filter_field" class="form-control">
+                                    <option value="">Filter by...</option>
+                                    <!-- Add filter options based on model_config.list_filter -->
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-outline-primary w-100">Apply</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Object List -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        {% for field in model_config.list_display %}
+                                        <th>{{ field.replace('_', ' ').title() }}</th>
+                                        {% endfor %}
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for obj in objects %}
+                                    <tr>
+                                        {% for field in model_config.list_display %}
+                                        <td>
+                                            {% if field == 'id' %}
+                                                {{ obj.id }}
+                                            {% else %}
+                                                {{ getattr(obj, field) }}
+                                            {% endif %}
+                                        </td>
+                                        {% endfor %}
+                                        <td>
+                                            <a href="/admin/{{ model_name }}/{{ obj.id }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" 
+                                                  action="/admin/{{ model_name }}/{{ obj.id }}/delete" 
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Are you sure?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if total_pages > 1 %}
+                        <nav>
+                            <ul class="pagination">
+                                {% for p in range(1, total_pages + 1) %}
+                                <li class="page-item {% if p == page %}active{% endif %}">
+                                    <a class="page-link" 
+                                       href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}">
+                                        {{ p }}
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
