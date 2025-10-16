@@ -21,7 +21,7 @@
             <div class="col-md-8 mx-auto">
                 <div class="card">
                     <div class="card-header">
-                        <h4>{% if object %}Edit{% else %}Add{% endif %} {{ model_name.title().singularize() }}</h4>
+                        <h4>{% if object %}Edit{% else %}Add{% endif %} {{ model_name.title() }}</h4>
                     </div>
                     <div class="card-body">
                         {% if error %}

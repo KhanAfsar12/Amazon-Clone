@@ -82,7 +82,7 @@
                                             {% if field == 'id' %}
                                                 {{ obj.id }}
                                             {% else %}
-                                                {{ getattr(obj, field) }}
+                                                {{ obj|attr(field) }}
                                             {% endif %}
                                         </td>
                                         {% endfor %}

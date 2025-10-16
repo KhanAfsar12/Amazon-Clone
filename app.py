@@ -7,7 +7,7 @@ from typing import List, Optional, Type, Any
 import json
 import uvicorn
 
-from mongoengine import connect, Document, EmbeddedDocument
+from mongoengine import connect, Document, EmbeddedDocument, signals
 from mongoengine.fields import (
     StringField, DecimalField, IntField, ListField, 
     EmbeddedDocumentField, EmbeddedDocumentListField,
@@ -293,6 +293,11 @@ class User(Document):
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)
 
+    @staticmethod
+    def pre_delete(sender, document, **kwargs):
+        from mongoengine.queryset.visitor import Q
+        Session.objects(Q(user_id=document.id)).delete()
+
 class Address(EmbeddedDocument):
     """Embedded document for user addresses"""
     address_type = StringField(required=True, choices=('shipping', 'billing', 'both'))
@@ -526,8 +531,8 @@ class UserAuth:
         
         if not user:
             return None
-        
-        if not check_password_hash(user.hash_password, password):
+
+        if not check_password_hash(user.password_hash, password):
             return None
         
         if not user.is_active:
@@ -542,6 +547,13 @@ class UserAuth:
             "user_type": "user"
         }
         return SessionManager.create_session(user_id, 'user', user_data)
+
+
+
+# --------------------------
+# Connect signals for automatic session clean-up
+# --------------------------
+signals.pre_delete.connect(User.pre_delete, sender=User)
 
 
 # --------------------------
@@ -737,6 +749,7 @@ async def admin_model_add(request: Request, model_name: str):
 @app.post("/admin/{model_name}/add")
 async def admin_model_create(request: Request, model_name: str):
     session_id = request.cookies.get("admin_session")
+    print("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
     if not SessionManager.verify_session(session_id, 'admin'):
         return RedirectResponse(url="/admin")
     
@@ -745,7 +758,7 @@ async def admin_model_create(request: Request, model_name: str):
     
     config = ADMIN_MODELS[model_name]
     form_data = await request.form()
-    
+    print("__________________________________________________________________________________________")
     try:
         # Create object from form data
         obj_data = {}
@@ -754,7 +767,9 @@ async def admin_model_create(request: Request, model_name: str):
                 value = form_data[field_name]
                 
                 # Handle different field types
+                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                 field = getattr(config.model, field_name, None)
+                print("/////////////////////////////////////////////////////////////////////////////")
                 if field and isinstance(field, (ReferenceField, ObjectIdField)):
                     if value:
                         if field_name == "category" and model_name == "products":
