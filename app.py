@@ -296,7 +296,7 @@ class User(Document):
     @staticmethod
     def pre_delete(sender, document, **kwargs):
         from mongoengine.queryset.visitor import Q
-        Session.objects(Q(user_id=document.id)).delete()
+        Session.objects(user_id=document).delete()
 
 class Address(EmbeddedDocument):
     """Embedded document for user addresses"""
@@ -743,13 +743,16 @@ async def admin_model_add(request: Request, model_name: str):
         context["categories"] = Category.objects.all()
     elif model_name == "categories":
         context["parent_categories"] = Category.objects.all()
+    elif model_name == "orders":
+        context["users"] = User.objects.all()
+    elif model_name == "users":
+        pass
     
     return templates.TemplateResponse("admin/model_form.html", context)
 
 @app.post("/admin/{model_name}/add")
 async def admin_model_create(request: Request, model_name: str):
     session_id = request.cookies.get("admin_session")
-    print("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
     if not SessionManager.verify_session(session_id, 'admin'):
         return RedirectResponse(url="/admin")
     
@@ -758,7 +761,6 @@ async def admin_model_create(request: Request, model_name: str):
     
     config = ADMIN_MODELS[model_name]
     form_data = await request.form()
-    print("__________________________________________________________________________________________")
     try:
         # Create object from form data
         obj_data = {}
@@ -767,9 +769,7 @@ async def admin_model_create(request: Request, model_name: str):
                 value = form_data[field_name]
                 
                 # Handle different field types
-                print("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
                 field = getattr(config.model, field_name, None)
-                print("/////////////////////////////////////////////////////////////////////////////")
                 if field and isinstance(field, (ReferenceField, ObjectIdField)):
                     if value:
                         if field_name == "category" and model_name == "products":
@@ -826,6 +826,8 @@ async def admin_model_edit(request: Request, model_name: str, obj_id: str):
         context["categories"] = Category.objects.all()
     elif model_name == "categories":
         context["parent_categories"] = Category.objects.all()
+    elif model_name == "orders":
+        context["users"] = User.objects.all()
     
     return templates.TemplateResponse("admin/model_form.html", context)
 
