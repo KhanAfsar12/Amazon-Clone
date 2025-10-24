@@ -308,7 +308,6 @@ class User(Document):
 
     @staticmethod
     def pre_delete(sender, document, **kwargs):
-        from mongoengine.queryset.visitor import Q
         Session.objects(user_id=document).delete()
 
 class Address(EmbeddedDocument):
@@ -940,34 +939,28 @@ async def signup_user(
     first_name: str = Form(None),
     last_name: str = Form(None)
 ):
-    # Validation
     errors = []
     
-    # Password validation
     if password != confirm_password:
         errors.append("Passwords do not match")
     
     if len(password) < 6:
         errors.append("Password must be at least 6 characters long")
     
-    # Truncate password if longer than 72 characters
     if len(password) > 72:
         password = password[:72]
     
-    # Username validation
     if len(username) < 3:
         errors.append("Username must be at least 3 characters long")
     
     if len(username) > 50:
         errors.append("Username must be 50 characters or less")
     
-    # Email validation
     import re
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_pattern, email):
         errors.append("Please enter a valid email address")
     
-    # Check if user already exists (only if no errors so far)
     if not errors:
         if User.objects(username=username):
             errors.append("Username already exists")
@@ -975,7 +968,6 @@ async def signup_user(
         if User.objects(email=email):
             errors.append("Email already exists")
     
-    # Return errors if any
     if errors:
         return templates.TemplateResponse("auth/signup.html", {
             "request": request,
@@ -989,7 +981,6 @@ async def signup_user(
         })
     
     try:
-        # Create new user
         hashed_password = generate_password_hash(password)
         user = User(
             username=username,
@@ -1001,7 +992,6 @@ async def signup_user(
         )
         user.save()
         
-        # Create session
         session_id = UserAuth.create_session(str(user.id))
         
         response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
