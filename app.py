@@ -19,12 +19,25 @@ import mongoengine.errors
 from bson import ObjectId
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from contextlib import asynccontextmanager
+
+
+
+# --------------------------
+# Background Tasks (Optional)
+# --------------------------
+
+@asynccontextmanager
+async def life_span(app: FastAPI):
+    """Clean up expired sessions on startup"""
+    SessionManager.cleanup_expired_sessions()
+    yield
 
 
 # --------------------------
 # FastAPI connection
 # --------------------------
-app = FastAPI()
+app = FastAPI(lifespan=life_span)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -526,12 +539,13 @@ class UserAuth:
     def verify_credentials(username: str, password: str) -> User:
         """Verify user credentials and return user object if valid"""
         user = User.objects(username=username).first()
+       
         if not user:
             user = User.objects(email=username).first()
         
         if not user:
             return None
-
+        
         if not check_password_hash(user.password_hash, password):
             return None
         
@@ -770,6 +784,10 @@ async def admin_model_create(request: Request, model_name: str):
                 
                 # Handle different field types
                 field = getattr(config.model, field_name, None)
+                if model_name == 'users' and field_name == 'password' and value:
+                    hashed_password = generate_password_hash()
+                    obj_data['password_hash'] = hashed_password
+                    continue
                 if field and isinstance(field, (ReferenceField, ObjectIdField)):
                     if value:
                         if field_name == "category" and model_name == "products":
@@ -1078,16 +1096,7 @@ async def user_profile(request: Request, current_user: User = Depends(get_curren
     })
 
 
-# --------------------------
-# Background Tasks (Optional)
-# --------------------------
-
-@app.on_event("startup")
-async def startup_event():
-    """Clean up expired sessions on startup"""
-    SessionManager.cleanup_expired_sessions()
-
 app.extra['models'] = ADMIN_MODELS
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", port=5000, host='127.0.0.1', reload=True)
+    uvicorn.run("app:app", port=7000, host='127.0.0.1', reload=True)
