@@ -14,6 +14,7 @@ from mongoengine.fields import (
     DateTimeField, BooleanField, URLField, DictField,
     ReferenceField, EmailField, ObjectIdField
 )
+from mongoengine.queryset.visitor import Q
 from datetime import datetime, timedelta
 import mongoengine.errors
 from bson import ObjectId
@@ -272,7 +273,9 @@ class User(Document):
         'indexes': [
             'email',
             'username',
-            'created_at'
+            'created_at',
+            'is_admin',
+            'is_staff'
         ]
     }
     
@@ -299,7 +302,8 @@ class User(Document):
     })
     
     # Status
-    user_type = StringField(max_length=200, default='user')
+    is_admin = BooleanField(default=False)
+    is_staff = BooleanField(default=False)
     is_active = BooleanField(default=True)
     is_verified = BooleanField(default=False)
     last_login = DateTimeField()
@@ -515,11 +519,11 @@ class AdminAuth:
                 detail="Invalid password"
             )
         
-        # Check if user has admin privileges
-        if existing_user.user_type != 'admin':
+        # Check if user has admin privileges using is_admin field
+        if not existing_user.is_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient privileges"
+                detail="Insufficient privileges - Admin access required"
             )
         
         return True
@@ -528,7 +532,7 @@ class AdminAuth:
     def create_session(user_id: str) -> str:
         """Create admin session"""
         user_data = {
-            "user_type": "admin"
+            "is_admin": True
         }
         return SessionManager.create_session(user_id, 'admin', user_data)
 
@@ -557,7 +561,7 @@ class UserAuth:
     def create_session(user_id: str) -> str:
         """Create user session"""
         user_data = {
-            "user_type": "user"
+            "is_admin": False
         }
         return SessionManager.create_session(user_id, 'user', user_data)
 
@@ -576,7 +580,7 @@ signals.pre_delete.connect(User.pre_delete, sender=User)
 class AdminModelConfig:
     def __init__(self, model: Type[Document], list_display: List[str] = None, search_fields: List[str] = None, list_filter: List[str] = None):
         self.model = model
-        self.list_display = list_display or ["id", "name"] if hasattr(model, "name") else ["id"]
+        self.list_display = list_display or []
         self.search_fields = search_fields or []
         self.list_filter = list_filter or []
 
@@ -596,9 +600,9 @@ ADMIN_MODELS = {
     ),
     'users': AdminModelConfig(
         User,
-        list_display=['username', 'email', 'first_name', 'last_name', 'is_active', 'created_at'],
+        list_display=['username', 'email', 'first_name', 'last_name', 'is_active', 'is_verified', 'is_admin', 'is_staff', 'created_at', 'last_login'],
         search_fields=['username', 'email', 'first_name', 'last_name'],
-        list_filter=['is_active', 'is_verified']
+        list_filter=['is_active', 'is_verified', 'is_admin', 'is_staff']
     ),
     'orders': AdminModelConfig(
         Order,
@@ -647,6 +651,8 @@ async def admin_login(request: Request, username: str = Form(...), password: str
     try:
         if AdminAuth.login(username, password):
             user = User.objects(username=username).first()
+            user.last_login = datetime.utcnow()
+            user.save()
             session_id = AdminAuth.create_session(str(user.id))
             
             response = RedirectResponse(url="/admin/dashboard", status_code=status.HTTP_302_FOUND)
@@ -704,26 +710,29 @@ async def admin_model_list(
     model = config.model
 
     # Build query
-    query = {}
+    query = Q()
     
     # Search
     if search and config.search_fields:
-        or_queries = []
+        or_queries = Q()
         for field in config.search_fields:
-            or_queries.append({f"{field}__icontains": search})
-        if or_queries:
-            query["$or"] = or_queries
+            or_queries |= Q(**({f"{field}__icontains": search}))
+        query &= or_queries
     
     # Filter
     if filter_field and filter_value:
-        query[filter_field] = filter_value
+        query &= Q(**{filter_field: filter_value})
     
     # Pagination
     per_page = 20
     skip = (page - 1) * per_page
     
-    objects = model.objects(**query).skip(skip).limit(per_page)
-    total_count = model.objects(**query).count()
+    if query:
+        objects = model.objects(query).skip(skip).limit(per_page)
+        total_count = model.objects(query).count()
+    else:
+        objects = model.objects.skip(skip).limit(per_page)
+        total_count = model.objects.count()
     total_pages = (total_count + per_page - 1) // per_page
     
     return templates.TemplateResponse("admin/model_list.html", {
@@ -774,46 +783,97 @@ async def admin_model_create(request: Request, model_name: str):
     
     config = ADMIN_MODELS[model_name]
     form_data = await request.form()
+    
     try:
-        # Create object from form data
         obj_data = {}
         for field_name in form_data:
-            if field_name not in ['csrf_token']:  # Skip CSRF if you add it
+            if field_name not in ['csrf_token']:
                 value = form_data[field_name]
                 
-                # Handle different field types
                 field = getattr(config.model, field_name, None)
+                
                 if model_name == 'users' and field_name == 'password' and value:
-                    hashed_password = generate_password_hash()
+                    hashed_password = generate_password_hash(value)
                     obj_data['password_hash'] = hashed_password
                     continue
-                if field and isinstance(field, (ReferenceField, ObjectIdField)):
+                
+                if model_name == 'users' and field_name == 'user_type':
+                    continue 
+                
+                if field and isinstance(field, BooleanField):
+                    print(field_name)
+                    obj_data[field_name] = field_name in form_data
+                    continue
+                
+                if field and isinstance(field, ListField):
+                    if value:
+                        if field_name == 'tags':
+                            obj_data[field_name] = [tag.strip() for tag in value.split(',') if tag.strip()]
+                        else:
+                            obj_data[field_name] = value.split(',') if value else []
+                    else:
+                        obj_data[field_name] = []
+                
+                elif field and isinstance(field, (ReferenceField, ObjectIdField)):
                     if value:
                         if field_name == "category" and model_name == "products":
                             obj_data[field_name] = Category.objects.get(id=value)
                         elif field_name == "user" and model_name == "orders":
                             obj_data[field_name] = User.objects.get(id=value)
+                        elif field_name == "parent_category" and model_name == "categories":
+                            obj_data[field_name] = Category.objects.get(id=value)
+                
                 elif field and isinstance(field, (DecimalField, IntField)):
                     obj_data[field_name] = float(value) if value else 0
-                elif field and isinstance(field, BooleanField):
-                    obj_data[field_name] = bool(value)
+                
                 else:
                     obj_data[field_name] = value
         
-        # Create the object
+        if model_name == 'users':
+            if 'is_active' not in obj_data:
+                obj_data['is_active'] = True
+            if 'is_admin' not in obj_data:
+                obj_data['is_admin'] = False
+            if 'is_staff' not in obj_data:
+                obj_data['is_staff'] = False
+        
+        if model_name == 'products':
+            if 'manage_stock' not in obj_data:
+                obj_data['manage_stock'] = True
+            if 'allow_backorders' not in obj_data:
+                obj_data['allow_backorders'] = False
+            if 'has_variants' not in obj_data:
+                obj_data['has_variants'] = False
+            if 'is_active' not in obj_data:
+                obj_data['is_active'] = True
+            if 'is_featured' not in obj_data:
+                obj_data['is_featured'] = False
+            if 'is_digital' not in obj_data:
+                obj_data['is_digital'] = False
+        
         obj = config.model(**obj_data)
         obj.save()
         
         return RedirectResponse(url=f"/admin/{model_name}", status_code=status.HTTP_302_FOUND)
     
     except Exception as e:
-        return templates.TemplateResponse("admin/model_form.html", {
+        # Get related objects for context in case of error
+        context = {
             "request": request,
             "model_name": model_name,
             "model_config": config,
             "error": str(e),
             "form_data": dict(form_data)
-        })
+        }
+        
+        if model_name == "products":
+            context["categories"] = Category.objects.all()
+        elif model_name == "categories":
+            context["parent_categories"] = Category.objects.all()
+        elif model_name == "orders":
+            context["users"] = User.objects.all()
+        
+        return templates.TemplateResponse("admin/model_form.html", context)
 
 @app.get("/admin/{model_name}/{obj_id}", response_class=HTMLResponse)
 async def admin_model_edit(request: Request, model_name: str, obj_id: str):
@@ -863,38 +923,71 @@ async def admin_model_update(request: Request, model_name: str, obj_id: str):
     try:
         obj = config.model.objects.get(id=obj_id)
         
-        # Update object from form data
         for field_name in form_data:
             if field_name not in ['csrf_token'] and hasattr(obj, field_name):
                 value = form_data[field_name]
                 
-                # Handle different field types
+                if model_name == 'users' and field_name == 'password' and value:
+                    hashed_password = generate_password_hash(value)
+                    obj.password_hash = hashed_password
+                    continue
+                
                 field = getattr(config.model, field_name, None)
-                if field and isinstance(field, (ReferenceField, ObjectIdField)):
+                
+                # Handle boolean fields - convert string to boolean
+                if field and isinstance(field, BooleanField):
+                    # Convert string 'true' to boolean True, anything else to False
+                    boolean_value = value.lower() == 'true' if value else False
+                    print(f"Setting {field_name} to {boolean_value} (from value: '{value}')")
+                    setattr(obj, field_name, boolean_value)
+                    continue
+                
+                if field and isinstance(field, ListField):
+                    if value:
+                        if field_name == 'tags':
+                            setattr(obj, field_name, [tag.strip() for tag in value.split(',') if tag.strip()])
+                        else:
+                            setattr(obj, field_name, value.split(',') if value else [])
+                    else:
+                        setattr(obj, field_name, [])
+                
+                elif field and isinstance(field, (ReferenceField, ObjectIdField)):
                     if value:
                         if field_name == "category" and model_name == "products":
                             setattr(obj, field_name, Category.objects.get(id=value))
                         elif field_name == "user" and model_name == "orders":
                             setattr(obj, field_name, User.objects.get(id=value))
+                        elif field_name == "parent_category" and model_name == "categories":
+                            setattr(obj, field_name, Category.objects.get(id=value))
+                    else:
+                        setattr(obj, field_name, None)
+                
                 elif field and isinstance(field, (DecimalField, IntField)):
-                    setattr(obj, field_name, float(value) if value else 0)
-                elif field and isinstance(field, BooleanField):
-                    setattr(obj, field_name, bool(value))
+                    setattr(obj, field_name, float(value) if value else 0)                
                 else:
-                    setattr(obj, field_name, value)
-        
+                    setattr(obj, field_name, value)  
         obj.save()
         
         return RedirectResponse(url=f"/admin/{model_name}", status_code=status.HTTP_302_FOUND)
     
     except Exception as e:
-        return templates.TemplateResponse("admin/model_form.html", {
+        context = {
             "request": request,
             "model_name": model_name,
             "model_config": config,
             "object": obj,
             "error": str(e)
-        })
+        }
+        # Add related objects for foreign keys in error case
+        if model_name == "products":
+            context["categories"] = Category.objects.all()
+        elif model_name == "categories":
+            context["parent_categories"] = Category.objects.all()
+        elif model_name == "orders":
+            context["users"] = User.objects.all()
+        
+        return templates.TemplateResponse("admin/model_form.html", context)    
+
 
 @app.post("/admin/{model_name}/{obj_id}/delete")
 async def admin_model_delete(request: Request, model_name: str, obj_id: str):
@@ -988,7 +1081,9 @@ async def signup_user(
             password_hash=hashed_password,
             first_name=first_name,
             last_name=last_name,
-            is_active=True
+            is_active=True,
+            is_admin=False,
+            is_staff=False
         )
         user.save()
         

@@ -111,21 +111,21 @@
                                     <div class="row">
                                         <div class="col-md-4">
                                             <div class="mb-3 form-check">
-                                                <input type="checkbox" name="is_active" class="form-check-input" 
+                                                <input type="checkbox" name="is_active" class="form-check-input" value="true"
                                                        {% if not object or object.is_active %}checked{% endif %}>
                                                 <label class="form-check-label">Active</label>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="mb-3 form-check">
-                                                <input type="checkbox" name="is_featured" class="form-check-input" 
+                                                <input type="checkbox" name="is_featured" class="form-check-input" value="true"
                                                        {% if object and object.is_featured %}checked{% endif %}>
                                                 <label class="form-check-label">Featured</label>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="mb-3 form-check">
-                                                <input type="checkbox" name="manage_stock" class="form-check-input" 
+                                                <input type="checkbox" name="manage_stock" class="form-check-input" value="true"
                                                        {% if not object or object.manage_stock %}checked{% endif %}>
                                                 <label class="form-check-label">Manage Stock</label>
                                             </div>
@@ -177,7 +177,7 @@
                                                value="{{ object.image_url if object else '' }}">
                                     </div>
                                     <div class="mb-3 form-check">
-                                        <input type="checkbox" name="is_active" class="form-check-input" 
+                                        <input type="checkbox" name="is_active" class="form-check-input" value="true"
                                                {% if not object or object.is_active %}checked{% endif %}>
                                         <label class="form-check-label">Active</label>
                                     </div>
@@ -201,16 +201,14 @@
                                     {% if not object %}
                                     <div class="mb-3">
                                         <label class="form-label">Password *</label>
-                                        <input type="password" name="password_hash" class="form-control" required>
+                                        <input type="password" name="password" class="form-control" required>
+                                    </div>
+                                    {% else %}
+                                    <div class="mb-3">
+                                        <label class="form-label">Password (leave blank to keep current)</label>
+                                        <input type="password" name="password" class="form-control">
                                     </div>
                                     {% endif %}
-                                    <div class="mb-3">
-                                        <label class="form-label">User Type</label>
-                                        <select name="user_type" class="form-control">
-                                            <option value="user" {% if object and object.user_type == 'user' %}selected{% endif %}>User</option>
-                                            <option value="admin" {% if object and object.user_type == 'admin' %}selected{% endif %}>Admin</option>
-                                        </select>
-                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
@@ -228,21 +226,36 @@
                                         <input type="text" name="phone" class="form-control" 
                                                value="{{ object.phone if object else '' }}">
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3 form-check">
-                                                <input type="checkbox" name="is_active" class="form-check-input" 
-                                                       {% if not object or object.is_active %}checked{% endif %}>
-                                                <label class="form-check-label">Active</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3 form-check">
-                                                <input type="checkbox" name="is_verified" class="form-check-input" 
-                                                       {% if object and object.is_verified %}checked{% endif %}>
-                                                <label class="form-check-label">Verified</label>
-                                            </div>
-                                        </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-md-3">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" name="is_active" class="form-check-input" value="true"
+                                               {% if not object or object.is_active %}checked{% endif %}>
+                                        <label class="form-check-label">Active</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" name="is_verified" class="form-check-input" value="true"
+                                               {% if object and object.is_verified %}checked{% endif %}>
+                                        <label class="form-check-label">Verified</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" name="is_admin" class="form-check-input" value="true"
+                                               {% if object and object.is_admin %}checked{% endif %}>
+                                        <label class="form-check-label">Admin</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" name="is_staff" class="form-check-input" value="true"
+                                               {% if object and object.is_staff %}checked{% endif %}>
+                                        <label class="form-check-label">Staff</label>
                                     </div>
                                 </div>
                             </div>
@@ -368,5 +381,35 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // JavaScript to handle checkbox behavior
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hidden fields for unchecked checkboxes
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                // Add a hidden input with same name and value false
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = checkbox.name;
+                hiddenInput.value = 'false';
+                checkbox.parentNode.insertBefore(hiddenInput, checkbox);
+                
+                // Update hidden input when checkbox changes
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        hiddenInput.disabled = true;
+                    } else {
+                        hiddenInput.disabled = false;
+                    }
+                });
+                
+                // Set initial state
+                if (checkbox.checked) {
+                    hiddenInput.disabled = true;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

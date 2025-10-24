@@ -37,7 +37,8 @@ def create_admin_user():
             password_hash=hashed_password,
             first_name=admin_first_name,
             last_name=admin_last_name,
-            user_type="admin",
+            is_admin=True,
+            is_staff=True,
             is_active=True,
             is_verified=True
         )
