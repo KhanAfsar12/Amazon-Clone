@@ -7,7 +7,7 @@ from typing import List, Optional, Type, Any
 import json
 import uvicorn
 
-from mongoengine import connect, Document, EmbeddedDocument
+from mongoengine import connect, Document, EmbeddedDocument, signals
 from mongoengine.fields import (
     StringField, DecimalField, IntField, ListField, 
     EmbeddedDocumentField, EmbeddedDocumentListField,
@@ -19,12 +19,25 @@ import mongoengine.errors
 from bson import ObjectId
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from contextlib import asynccontextmanager
+
+
+
+# --------------------------
+# Background Tasks (Optional)
+# --------------------------
+
+@asynccontextmanager
+async def life_span(app: FastAPI):
+    """Clean up expired sessions on startup"""
+    SessionManager.cleanup_expired_sessions()
+    yield
 
 
 # --------------------------
 # FastAPI connection
 # --------------------------
-app = FastAPI()
+app = FastAPI(lifespan=life_span)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -293,6 +306,11 @@ class User(Document):
     created_at = DateTimeField(default=datetime.utcnow)
     updated_at = DateTimeField(default=datetime.utcnow)
 
+    @staticmethod
+    def pre_delete(sender, document, **kwargs):
+        from mongoengine.queryset.visitor import Q
+        Session.objects(user_id=document).delete()
+
 class Address(EmbeddedDocument):
     """Embedded document for user addresses"""
     address_type = StringField(required=True, choices=('shipping', 'billing', 'both'))
@@ -521,13 +539,14 @@ class UserAuth:
     def verify_credentials(username: str, password: str) -> User:
         """Verify user credentials and return user object if valid"""
         user = User.objects(username=username).first()
+       
         if not user:
             user = User.objects(email=username).first()
         
         if not user:
             return None
         
-        if not check_password_hash(user.hash_password, password):
+        if not check_password_hash(user.password_hash, password):
             return None
         
         if not user.is_active:
@@ -542,6 +561,13 @@ class UserAuth:
             "user_type": "user"
         }
         return SessionManager.create_session(user_id, 'user', user_data)
+
+
+
+# --------------------------
+# Connect signals for automatic session clean-up
+# --------------------------
+signals.pre_delete.connect(User.pre_delete, sender=User)
 
 
 # --------------------------
@@ -731,6 +757,10 @@ async def admin_model_add(request: Request, model_name: str):
         context["categories"] = Category.objects.all()
     elif model_name == "categories":
         context["parent_categories"] = Category.objects.all()
+    elif model_name == "orders":
+        context["users"] = User.objects.all()
+    elif model_name == "users":
+        pass
     
     return templates.TemplateResponse("admin/model_form.html", context)
 
@@ -745,7 +775,6 @@ async def admin_model_create(request: Request, model_name: str):
     
     config = ADMIN_MODELS[model_name]
     form_data = await request.form()
-    
     try:
         # Create object from form data
         obj_data = {}
@@ -755,6 +784,10 @@ async def admin_model_create(request: Request, model_name: str):
                 
                 # Handle different field types
                 field = getattr(config.model, field_name, None)
+                if model_name == 'users' and field_name == 'password' and value:
+                    hashed_password = generate_password_hash()
+                    obj_data['password_hash'] = hashed_password
+                    continue
                 if field and isinstance(field, (ReferenceField, ObjectIdField)):
                     if value:
                         if field_name == "category" and model_name == "products":
@@ -811,6 +844,8 @@ async def admin_model_edit(request: Request, model_name: str, obj_id: str):
         context["categories"] = Category.objects.all()
     elif model_name == "categories":
         context["parent_categories"] = Category.objects.all()
+    elif model_name == "orders":
+        context["users"] = User.objects.all()
     
     return templates.TemplateResponse("admin/model_form.html", context)
 
@@ -1061,16 +1096,7 @@ async def user_profile(request: Request, current_user: User = Depends(get_curren
     })
 
 
-# --------------------------
-# Background Tasks (Optional)
-# --------------------------
-
-@app.on_event("startup")
-async def startup_event():
-    """Clean up expired sessions on startup"""
-    SessionManager.cleanup_expired_sessions()
-
 app.extra['models'] = ADMIN_MODELS
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", port=5000, host='127.0.0.1', reload=True)
+    uvicorn.run("app:app", port=7000, host='127.0.0.1', reload=True)
