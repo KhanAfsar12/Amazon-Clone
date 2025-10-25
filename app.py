@@ -940,6 +940,14 @@ async def admin_model_update(request: Request, model_name: str, obj_id: str):
                     boolean_value = value.lower() == 'true' if value else False
                     print(f"Setting {field_name} to {boolean_value} (from value: '{value}')")
                     setattr(obj, field_name, boolean_value)
+                    session_user = Session.objects.get(user_id=obj_id)
+
+                    if field_name == 'is_admin' and boolean_value == True:
+                        session_user['session_type'], session_user['user_data']['is_admin'] = 'admin', True
+                        session_user.save()
+                    if field_name == 'is_admin' and boolean_value == False:
+                        session_user['session_type'], session_user['user_data']['is_admin'] = 'user', False
+                        session_user.save()
                     continue
                 
                 if field and isinstance(field, ListField):
