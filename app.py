@@ -141,7 +141,6 @@ class Product(Document):
         'collection': 'products',
         'indexes': [
             'name',
-            'sku',
             'category',
             'brand',
             'price',
@@ -919,29 +918,29 @@ async def admin_model_update(request: Request, model_name: str, obj_id: str):
     
     config = ADMIN_MODELS[model_name]
     form_data = await request.form()
-    
+    data_dict = form_data._dict
     try:
         obj = config.model.objects.get(id=obj_id)
-        
         for field_name in form_data:
             if field_name not in ['csrf_token'] and hasattr(obj, field_name):
                 value = form_data[field_name]
-                
-                if model_name == 'users' and field_name == 'password' and value:
-                    hashed_password = generate_password_hash(value)
+                if model_name == 'users' and data_dict['password']:
+                    hashed_password = generate_password_hash(data_dict['password'])
                     obj.password_hash = hashed_password
+                    obj.save()
                     continue
                 
                 field = getattr(config.model, field_name, None)
                 
-                # Handle boolean fields - convert string to boolean
                 if field and isinstance(field, BooleanField):
-                    # Convert string 'true' to boolean True, anything else to False
                     boolean_value = value.lower() == 'true' if value else False
-                    print(f"Setting {field_name} to {boolean_value} (from value: '{value}')")
+                    
                     setattr(obj, field_name, boolean_value)
-                    session_user = Session.objects.get(user_id=obj_id)
-
+                    session_user = Session.objects(user_id=obj_id).first()
+                    
+                    if session_user is None:
+                        RedirectResponse(url=f"/admin/{model_name}/{obj_id}", status_code=status.HTTP_404_NOT_FOUND)
+                    print(session_user)
                     if field_name == 'is_admin' and boolean_value == True:
                         session_user['session_type'], session_user['user_data']['is_admin'] = 'admin', True
                         session_user.save()
@@ -973,7 +972,7 @@ async def admin_model_update(request: Request, model_name: str, obj_id: str):
                 elif field and isinstance(field, (DecimalField, IntField)):
                     setattr(obj, field_name, float(value) if value else 0)                
                 else:
-                    setattr(obj, field_name, value)  
+                    setattr(obj, field_name, value)
         obj.save()
         
         return RedirectResponse(url=f"/admin/{model_name}", status_code=status.HTTP_302_FOUND)
