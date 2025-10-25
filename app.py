@@ -801,8 +801,8 @@ async def admin_model_create(request: Request, model_name: str):
                     continue 
                 
                 if field and isinstance(field, BooleanField):
-                    print(field_name)
-                    obj_data[field_name] = field_name in form_data
+                    boolean_value = value.lower() == 'true' if value else False
+                    obj_data[field_name] = boolean_value
                     continue
                 
                 if field and isinstance(field, ListField):
