@@ -1,52 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="light">
 <head>
     <title>{{ model_name.title() }} - Admin</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .theme-toggle {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        .breadcrumb {
+            background-color: var(--bs-light);
+            border-radius: 0.375rem;
+        }
+        [data-bs-theme="dark"] .breadcrumb {
+            background-color: var(--bs-dark);
+        }
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .sidebar-sticky {
+            position: sticky;
+            top: 20px;
+        }
+        .table-responsive {
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        .action-buttons .btn {
+            padding: 0.25rem 0.5rem;
+        }
+        .pagination .page-link {
+            border-radius: 0.375rem;
+            margin: 0 2px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/admin/dashboard">E-Commerce Admin</a>
-            <div>
-                <a href="/admin/dashboard" class="btn btn-outline-light btn-sm">Dashboard</a>
-                <a href="/admin/logout" class="btn btn-outline-light btn-sm">Logout</a>
-            </div>
-        </div>
-    </nav>
+{% include 'admin/navbar.html' %}
 
     <div class="container-fluid mt-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb px-3 py-2">
+                <li class="breadcrumb-item">
+                    <a href="/admin/dashboard" class="text-decoration-none">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <i class="fas 
+                        {% if model_name == 'products' %}fa-box
+                        {% elif model_name == 'categories' %}fa-tags
+                        {% elif model_name == 'users' %}fa-users
+                        {% elif model_name == 'orders' %}fa-shopping-cart
+                        {% else %}fa-circle{% endif %} 
+                        me-2"></i>{{ model_name.title() }}
+                </li>
+            </ol>
+        </nav>
+
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3">
-                <div class="list-group">
-                    {% for model_key, model_config in request.app.extra['models'].items() %}
-                    <a href="/admin/{{ model_key }}" 
-                       class="list-group-item list-group-item-action {% if model_key == model_name %}active{% endif %}">
-                        {{ model_key.title() }}
-                    </a>
-                    {% endfor %}
+                <div class="card sidebar-sticky">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-bars me-2"></i>Navigation</h6>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        {% for model_key, model_config in models %}
+                        <a href="/admin/{{ model_key }}" 
+                           class="list-group-item list-group-item-action d-flex align-items-center {% if model_key == model_name %}active{% endif %}">
+                            <i class="fas 
+                                {% if model_key == 'products' %}fa-box
+                                {% elif model_key == 'categories' %}fa-tags
+                                {% elif model_key == 'users' %}fa-users
+                                {% elif model_key == 'orders' %}fa-shopping-cart
+                                {% else %}fa-circle{% endif %} 
+                                me-2 text-primary"></i>
+                            {{ model_key.title() }}
+                        </a>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
             <!-- Main Content -->
             <div class="col-md-9">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>{{ model_name.title() }}</h2>
-                    <a href="/admin/{{ model_name }}/add" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add {{ model_name.title() }}
-                    </a>
+                    <h2 class="mb-0">
+                        <i class="fas 
+                            {% if model_name == 'products' %}fa-box
+                            {% elif model_name == 'categories' %}fa-tags
+                            {% elif model_name == 'users' %}fa-users
+                            {% elif model_name == 'orders' %}fa-shopping-cart
+                            {% else %}fa-circle{% endif %} 
+                            me-2 text-primary"></i>{{ model_name.title() }}
+                    </h2>
+                    <div class="d-flex align-items-center">
+                        <div class="text-muted me-3">
+                            <small><i class="fas fa-calendar me-1"></i>{{ current_date }}</small>
+                        </div>
+                        <a href="/admin/{{ model_name }}/add" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Add {{ model_name.title() }}
+                        </a>
+                    </div>
                 </div>
-
+                
                 <!-- Search and Filters -->
-                <div class="card mb-4">
+                <div class="card card-hover mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-filter me-2 text-primary"></i>Search & Filters</h5>
+                    </div>
                     <div class="card-body">
                         <form method="get" class="row g-3">
                             <div class="col-md-6">
-                                <input type="text" name="search" class="form-control" 
-                                       placeholder="Search..." value="{{ search or '' }}">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" name="search" class="form-control" 
+                                           placeholder="Search..." value="{{ search or '' }}">
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <select name="filter_field" class="form-control">
@@ -60,9 +141,13 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <button type="submit" class="btn btn-outline-primary w-100">Apply</button>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter me-1"></i>Apply
+                                </button>
                                 {% if filter_field or search %}
-                                <a href="/admin/{{ model_name }}" class="btn btn-outline-danger w-100 mt-2">Clear</a>
+                                <a href="/admin/{{ model_name }}" class="btn btn-outline-danger w-100 mt-2">
+                                    <i class="fas fa-times me-1"></i>Clear
+                                </a>
                                 {% endif %}
                             </div>
                         </form>
@@ -73,6 +158,7 @@
                             <small class="text-muted">
                                 Active Filter: 
                                 <span class="badge bg-info">
+                                    <i class="fas fa-filter me-1"></i>
                                     {{ filter_field.replace('_', ' ').title() }}: {{ filter_value }}
                                 </span>
                             </small>
@@ -82,17 +168,21 @@
                 </div>
 
                 <!-- Object List -->
-                <div class="card">
-                    <div class="card-body">
+                <div class="card card-hover">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list me-2 text-primary"></i>{{ model_name.title() }} List</h5>
+                        <span class="badge bg-primary">{{ total_count }} total</span>
+                    </div>
+                    <div class="card-body p-0">
                         {% if objects %}
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover">
+                            <table class="table table-striped table-hover mb-0">
                                 <thead class="table-dark">
                                     <tr>
                                         {% for field in model_config.list_display %}
                                         <th>{{ field.replace('_', ' ').title() }}</th>
                                         {% endfor %}
-                                        <th>Actions</th>
+                                        <th width="120">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -115,9 +205,9 @@
                                             {# Handle boolean fields with badges #}
                                             {% elif field in ['is_active', 'is_verified', 'is_admin', 'is_staff', 'is_featured', 'is_digital', 'manage_stock', 'allow_backorders', 'has_variants'] %}
                                                 {% if obj[field] %}
-                                                    <span class="badge bg-success">Yes</span>
+                                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Yes</span>
                                                 {% else %}
-                                                    <span class="badge bg-secondary">No</span>
+                                                    <span class="badge bg-secondary"><i class="fas fa-times me-1"></i>No</span>
                                                 {% endif %}
                                             
                                             {# Handle status fields with colored badges #}
@@ -128,21 +218,28 @@
                                                     {% elif status_value in ['pending', 'processing', 'confirmed'] %}bg-warning
                                                     {% elif status_value in ['cancelled', 'failed', 'refunded'] %}bg-danger
                                                     {% else %}bg-secondary{% endif %}">
+                                                    {% if status_value in ['active', 'paid', 'delivered'] %}
+                                                        <i class="fas fa-check-circle me-1"></i>
+                                                    {% elif status_value in ['pending', 'processing'] %}
+                                                        <i class="fas fa-clock me-1"></i>
+                                                    {% elif status_value in ['cancelled', 'failed'] %}
+                                                        <i class="fas fa-times-circle me-1"></i>
+                                                    {% endif %}
                                                     {{ status_value|title if status_value else 'N/A' }}
                                                 </span>
                                             
                                             {# Handle price fields #}
                                             {% elif field in ['price', 'sale_price', 'cost_price', 'total_amount', 'subtotal', 'shipping_cost', 'tax_amount', 'discount_amount'] %}
-                                                ${{ "%.2f"|format(obj[field]) if obj[field] is not none else '0.00' }}
+                                                <span class="fw-bold text-success">${{ "%.2f"|format(obj[field]) if obj[field] is not none else '0.00' }}</span>
                                             
                                             {# Handle numeric fields #}
                                             {% elif field in ['stock_quantity', 'low_stock_threshold', 'review_count', 'display_order', 'quantity', 'helpful_votes', 'rating'] %}
-                                                {{ obj[field] if obj[field] is not none else '0' }}
+                                                <span class="badge bg-info">{{ obj[field] if obj[field] is not none else '0' }}</span>
                                             
                                             {# Handle date fields #}
                                             {% elif field in ['created_at', 'updated_at', 'last_login', 'published_at', 'completed_at'] %}
                                                 {% if obj[field] %}
-                                                    {{ obj[field].strftime('%Y-%m-%d %H:%M') }}
+                                                    <small class="text-muted">{{ obj[field].strftime('%Y-%m-%d %H:%M') }}</small>
                                                 {% else %}
                                                     <span class="text-muted">N/A</span>
                                                 {% endif %}
@@ -150,9 +247,21 @@
                                             {# Handle list fields #}
                                             {% elif field in ['tags', 'meta_keywords'] %}
                                                 {% if obj[field] %}
-                                                    <small>{{ obj[field]|join(', ') }}</small>
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        {% for tag in obj[field] %}
+                                                        <span class="badge bg-light text-dark">{{ tag }}</span>
+                                                        {% endfor %}
+                                                    </div>
                                                 {% else %}
                                                     <span class="text-muted">-</span>
+                                                {% endif %}
+                                            
+                                            {# Handle image fields #}
+                                            {% elif field in ['image', 'thumbnail', 'avatar'] %}
+                                                {% if obj[field] %}
+                                                    <img src="{{ obj[field] }}" alt="{{ field }}" class="img-thumbnail" style="max-height: 40px;">
+                                                {% else %}
+                                                    <span class="text-muted">No image</span>
                                                 {% endif %}
                                             
                                             {# Handle all other fields #}
@@ -161,17 +270,17 @@
                                             {% endif %}
                                         </td>
                                         {% endfor %}
-                                        <td>
+                                        <td class="action-buttons">
                                             <div class="btn-group btn-group-sm" role="group">
                                                 <a href="/admin/{{ model_name }}/{{ obj.id }}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                                   class="btn btn-outline-primary" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 <form method="post" 
                                                       action="/admin/{{ model_name }}/{{ obj.id }}/delete" 
                                                       class="d-inline"
                                                       onsubmit="return confirm('Are you sure you want to delete this {{ model_name.title() }}?')">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -185,42 +294,44 @@
 
                         <!-- Pagination -->
                         {% if total_pages > 1 %}
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination justify-content-center">
-                                {% if page > 1 %}
-                                <li class="page-item">
-                                    <a class="page-link" 
-                                       href="?page={{ page - 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter_field %}&filter_field={{ filter_field }}{% endif %}{% if filter_value %}&filter_value={{ filter_value }}{% endif %}">
-                                        Previous
-                                    </a>
-                                </li>
-                                {% endif %}
-
-                                {% for p in range(1, total_pages + 1) %}
-                                    {% if p >= page - 2 and p <= page + 2 %}
-                                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <div class="card-footer">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page > 1 %}
+                                    <li class="page-item">
                                         <a class="page-link" 
-                                           href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}{% if filter_field %}&filter_field={{ filter_field }}{% endif %}{% if filter_value %}&filter_value={{ filter_value }}{% endif %}">
-                                            {{ p }}
+                                           href="?page={{ page - 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter_field %}&filter_field={{ filter_field }}{% endif %}{% if filter_value %}&filter_value={{ filter_value }}{% endif %}">
+                                            <i class="fas fa-chevron-left me-1"></i>Previous
                                         </a>
                                     </li>
                                     {% endif %}
-                                {% endfor %}
 
-                                {% if page < total_pages %}
-                                <li class="page-item">
-                                    <a class="page-link" 
-                                       href="?page={{ page + 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter_field %}&filter_field={{ filter_field }}{% endif %}{% if filter_value %}&filter_value={{ filter_value }}{% endif %}">
-                                        Next
-                                    </a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
+                                    {% for p in range(1, total_pages + 1) %}
+                                        {% if p >= page - 2 and p <= page + 2 %}
+                                        <li class="page-item {% if p == page %}active{% endif %}">
+                                            <a class="page-link" 
+                                               href="?page={{ p }}{% if search %}&search={{ search }}{% endif %}{% if filter_field %}&filter_field={{ filter_field }}{% endif %}{% if filter_value %}&filter_value={{ filter_value }}{% endif %}">
+                                                {{ p }}
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page < total_pages %}
+                                    <li class="page-item">
+                                        <a class="page-link" 
+                                           href="?page={{ page + 1 }}{% if search %}&search={{ search }}{% endif %}{% if filter_field %}&filter_field={{ filter_field }}{% endif %}{% if filter_value %}&filter_value={{ filter_value }}{% endif %}">
+                                            Next<i class="fas fa-chevron-right ms-1"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
                         {% endif %}
 
                         <!-- Results Count -->
-                        <div class="text-center text-muted mt-3">
+                        <div class="card-footer text-center text-muted">
                             <small>Showing {{ objects.count() }} of {{ total_count }} {{ model_name }}</small>
                         </div>
 
@@ -230,7 +341,7 @@
                             <h4 class="text-muted">No {{ model_name }} found</h4>
                             <p class="text-muted">{% if search or filter_field %}Try adjusting your search or filters{% else %}Get started by adding a new {{ model_name.title() }}{% endif %}</p>
                             <a href="/admin/{{ model_name }}/add" class="btn btn-primary mt-2">
-                                <i class="fas fa-plus"></i> Add {{ model_name.title() }}
+                                <i class="fas fa-plus me-1"></i> Add {{ model_name.title() }}
                             </a>
                         </div>
                         {% endif %}
@@ -241,6 +352,48 @@
     </div>
 
     <script>
+        // Dark/Light Mode Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const htmlElement = document.documentElement;
+
+        // Check for saved theme preference or default to light
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        setTheme(currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const newTheme = htmlElement.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        function setTheme(theme) {
+            htmlElement.setAttribute('data-bs-theme', theme);
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeToggle.title = 'Switch to light mode';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeToggle.title = 'Switch to dark mode';
+            }
+        }
+
+        // Add current date
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            };
+            const currentDate = now.toLocaleDateString('en-US', options);
+            const dateElement = document.querySelector('.text-muted small');
+            if (dateElement) {
+                dateElement.innerHTML = `<i class="fas fa-calendar me-1"></i>${currentDate}`;
+            }
+        });
+
         // Add confirmation for delete actions
         document.addEventListener('DOMContentLoaded', function() {
             const deleteForms = document.querySelectorAll('form[onsubmit]');
