@@ -67,7 +67,7 @@ class ProductImage(EmbeddedDocument):
 
 class ProductVariant(EmbeddedDocument):
     """Embedded document for product variants"""
-    sku = StringField(required=True, max_length=100, unique=True)
+    sku = StringField(required=True, max_length=100)
     size = StringField(max_length=50)
     color = StringField(max_length=50)
     material = StringField(max_length=100)
