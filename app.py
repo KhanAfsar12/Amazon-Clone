@@ -671,7 +671,6 @@ async def admin_login(request: Request, username: str = Form(...), password: str
 
 @app.get("/admin/logout")
 async def admin_logout(request: Request):
-    print("[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]")
     session_id = request.cookies.get("admin_session")
     if session_id:
         SessionManager.delete_session(session_id)
