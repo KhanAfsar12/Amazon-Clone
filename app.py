@@ -668,6 +668,19 @@ async def admin_login(request: Request, username: str = Form(...), password: str
         "error": "Invalid credentials"
     })
 
+
+@app.get("/admin/logout")
+async def admin_logout(request: Request):
+    print("[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]")
+    session_id = request.cookies.get("admin_session")
+    if session_id:
+        SessionManager.delete_session(session_id)
+    
+    response = RedirectResponse(url="/admin")
+    response.delete_cookie(key="admin_session")
+    return response
+
+
 @app.get("/admin/dashboard", response_class=HTMLResponse)
 async def admin_dashboard(request: Request):
     session_id = request.cookies.get("admin_session")
@@ -1014,11 +1027,6 @@ async def admin_model_delete(request: Request, model_name: str, obj_id: str):
     except config.model.DoesNotExist:
         raise HTTPException(status_code=404, detail="Object not found")
 
-@app.get("/admin/logout")
-async def admin_logout():
-    response = RedirectResponse(url="/admin")
-    response.delete_cookie(key="admin_session")
-    return response
 
 
 # --------------------------
@@ -1146,6 +1154,7 @@ async def login_user(
             "request": request,
             "error": f"Login error: {str(e)}"
         })
+    
 
 @app.get("/logout")
 async def logout_user(request: Request):
@@ -1157,15 +1166,7 @@ async def logout_user(request: Request):
     response.delete_cookie(key="user_session")
     return response
 
-@app.get("/admin/logout")
-async def admin_logout(request: Request):
-    session_id = request.cookies.get("admin_session")
-    if session_id:
-        SessionManager.delete_session(session_id)
-    
-    response = RedirectResponse(url="/admin")
-    response.delete_cookie(key="admin_session")
-    return response
+
 
 # Dependency to get current user
 def get_current_user(request: Request):
