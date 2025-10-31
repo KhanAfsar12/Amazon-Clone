@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Products - E-Commerce</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">E-Commerce Store</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/products">All Products</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Categories</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="/products" class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                            All Categories
+                        </a>
+                        {% for cat in all_categories %}
+                        <a href="/products?category={{ cat.slug }}" 
+                           class="list-group-item list-group-item-action {% if current_category == cat.slug %}active{% endif %}">
+                            {{ cat.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>
+                        {% if current_category %}
+                            {{ current_category|title }} Products
+                        {% else %}
+                            All Products
+                        {% endif %}
+                    </h2>
+                    <span class="text-muted">{{ total_count }} products found</span>
+                </div>
+
+                <!-- Search Form -->
+                <form method="get" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search products..." value="{{ search_query or '' }}">
+                        {% if current_category %}
+                        <input type="hidden" name="category" value="{{ current_category }}">
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+
+                <!-- Products Grid -->
+                {% if products %}
+                <div class="row">
+                    {% for product in products %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card h-100">
+                            {% if product.primary_image %}
+                            <img src="{{ product.primary_image }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                            {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <span class="text-muted">No Image</span>
+                            </div>
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="card-text text-muted">{{ product.brand }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        {% if product.is_on_sale() %}
+                                        <span class="text-danger fw-bold">${{ "%.2f"|format(product.get_current_price()) }}</span>
+                                        <small class="text-muted text-decoration-line-through ms-2">${{ "%.2f"|format(product.price) }}</small>
+                                        {% else %}
+                                        <span class="fw-bold">${{ "%.2f"|format(product.price) }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge {% if product.is_in_stock() %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ "In Stock" if product.is_in_stock() else "Out of Stock" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <nav aria-label="Product pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page - 1 }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+
+                        {% for p in range(1, total_pages + 1) %}
+                        <li class="page-item {% if p == page %}active{% endif %}">
+                            <a class="page-link" href="?page={{ p }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+
+                        {% if page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page + 1 }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-5">
+                    <h4 class="text-muted">No products found</h4>
+                    <p class="text-muted">Try adjusting your search or filters</p>
+                    <a href="/products" class="btn btn-primary">View All Products</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
