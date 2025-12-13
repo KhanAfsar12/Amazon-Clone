@@ -18,7 +18,7 @@ from bson import ObjectId
 # --------------------------
 connect(
     db="ecommerce",
-    host="localhost",
+    host="mongodb://mongo_db:27017",
     port=27017
 )
 
