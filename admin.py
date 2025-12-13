@@ -70,7 +70,7 @@ def list_all_users():
         
         for user in users:
             status = "Active" if user.is_active else "Inactive"
-            print(f"{user.username:<15} {user.email:<25} {status:<8}")
+            print(f"{user.username:<15} {user.email:<25} {user.is_admin:<10} {status:<8}")
             
     except Exception as e:
         print(f"❌ Error listing users: {str(e)}")
@@ -94,7 +94,7 @@ def delete_user(username):
 def change_admin_password():
     """Change admin user password"""
     try:
-        admin_user = User.objects(username="admin").first()
+        admin_user = User.objects(username="admin", is_admin=True).first()
         if not admin_user:
             print("❌ Admin user not found!")
             return False
