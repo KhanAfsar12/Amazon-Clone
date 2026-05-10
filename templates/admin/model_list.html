@@ -115,21 +115,21 @@
                     </div>
                 </div>
                 
-                <!-- Search and Filters -->
+                                <!-- Search and Filters -->
                 <div class="card card-hover mb-4">
                     <div class="card-header bg-light">
                         <h5 class="mb-0"><i class="fas fa-filter me-2 text-primary"></i>Search & Filters</h5>
                     </div>
                     <div class="card-body">
                         <form method="get" class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                                     <input type="text" name="search" class="form-control" 
-                                           placeholder="Search..." value="{{ search or '' }}">
+                                        placeholder="Search..." value="{{ search or '' }}">
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <select name="filter_field" class="form-control">
                                     <option value="">Filter by...</option>
                                     {% for filter_field in model_config.list_filter %}
@@ -138,6 +138,13 @@
                                         {{ filter_field.replace('_', ' ').title() }}
                                     </option>
                                     {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="filter_value" class="form-control">
+                                    <option value="">Select value...</option>
+                                    <option value="true" {% if filter_value == 'true' %}selected{% endif %}>True</option>
+                                    <option value="false" {% if filter_value == 'false' %}selected{% endif %}>False</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -159,7 +166,8 @@
                                 Active Filter: 
                                 <span class="badge bg-info">
                                     <i class="fas fa-filter me-1"></i>
-                                    {{ filter_field.replace('_', ' ').title() }}: {{ filter_value }}
+                                    {{ filter_field.replace('_', ' ').title() }}: 
+                                    {% if filter_value == 'true' %}True{% else %}False{% endif %}
                                 </span>
                             </small>
                         </div>
