@@ -221,7 +221,10 @@ def home(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_login_page(request: Request):
-    return templates.TemplateResponse("admin/login.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/login.html",
+    )
 
 
 @app.post("/admin")
@@ -274,9 +277,9 @@ async def admin_dashboard(request: Request):
     order_count = Order.objects.count()
 
     return templates.TemplateResponse(
-        "admin/dashboard.html",
-        {
-            "request": request,
+        request = request,
+        name="admin/dashboard.html",
+        context ={
             "product_count": product_count,
             "category_count": category_count,
             "user_count": user_count,
@@ -346,9 +349,9 @@ async def admin_model_list(
     total_pages = (total_count + per_page - 1) // per_page
 
     return templates.TemplateResponse(
-        "admin/model_list.html",
-        {
-            "request": request,
+        request= request,
+        name="admin/model_list.html",
+        context={
             "model_name": model_name,
             "model_config": config,
             "objects": objects,
@@ -384,7 +387,7 @@ async def admin_model_add(request: Request, model_name: str):
     elif model_name == "users":
         pass
 
-    return templates.TemplateResponse("admin/model_form.html", context)
+    return templates.TemplateResponse(request=request, name="admin/model_form.html", context=context)
 
 
 @app.post("/admin/{model_name}/add")
@@ -495,7 +498,7 @@ async def admin_model_create(request: Request, model_name: str):
         elif model_name == "orders":
             context["users"] = User.objects.all()
 
-        return templates.TemplateResponse("admin/model_form.html", context)
+        return templates.TemplateResponse(request=request,name="admin/model_form.html", context=context)
 
 
 @app.get("/admin/{model_name}/{obj_id}", response_class=HTMLResponse)
@@ -529,7 +532,7 @@ async def admin_model_edit(request: Request, model_name: str, obj_id: str):
     elif model_name == "orders":
         context["users"] = User.objects.all()
 
-    return templates.TemplateResponse("admin/model_form.html", context)
+    return templates.TemplateResponse(request=request,name="admin/model_form.html", context=context)
 
 
 @app.post("/admin/{model_name}/{obj_id}")
@@ -640,7 +643,7 @@ async def admin_model_update(request: Request, model_name: str, obj_id: str):
         elif model_name == "orders":
             context["users"] = User.objects.all()
 
-        return templates.TemplateResponse("admin/model_form.html", context)
+        return templates.TemplateResponse(request=request, name="admin/model_form.html", context=context)
 
 
 @app.post("/admin/{model_name}/{obj_id}/delete")
@@ -671,7 +674,7 @@ async def admin_model_delete(request: Request, model_name: str, obj_id: str):
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
-    return templates.TemplateResponse("auth/signup.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="auth/signup.html")
 
 
 @app.post("/signup")
@@ -716,9 +719,9 @@ async def signup_user(
 
     if errors:
         return templates.TemplateResponse(
-            "auth/signup.html",
-            {
-                "request": request,
+            request=request,
+            name="auth/signup.html",
+            context={
                 "error": errors[0],
                 "form_data": {
                     "username": username,
@@ -751,9 +754,9 @@ async def signup_user(
 
     except Exception as e:
         return templates.TemplateResponse(
-            "auth/signup.html",
-            {
-                "request": request,
+            request=request,
+            name="auth/signup.html",
+            context={
                 "error": f"Error creating account: {str(e)}",
                 "form_data": {
                     "username": username,
@@ -767,7 +770,7 @@ async def signup_user(
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("auth/login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="auth/login.html")
 
 
 @app.post("/login")
@@ -778,8 +781,9 @@ async def login_user(
         user = UserAuth.verify_credentials(username, password)
         if not user:
             return templates.TemplateResponse(
-                "auth/login.html",
-                {"request": request, "error": "Invalid username or password"},
+                request=request,
+                name="auth/login.html",
+                context = {"error": "Invalid username or password"},
             )
 
         # Update last login
@@ -795,7 +799,9 @@ async def login_user(
 
     except Exception as e:
         return templates.TemplateResponse(
-            "auth/login.html", {"request": request, "error": f"Login error: {str(e)}"}
+            request=request,
+            name="auth/login.html", 
+            context={"error": f"Login error: {str(e)}"}
         )
 
 
@@ -829,7 +835,9 @@ async def user_profile(
         return RedirectResponse(url="/login")
 
     return templates.TemplateResponse(
-        "auth/profile.html", {"request": request, "user": current_user}
+        request= request,
+        name="auth/profile.html", 
+        context={ "user": current_user}
     )
 
 
